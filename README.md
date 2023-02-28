@@ -1,0 +1,1 @@
+# Unity-Collider-Manager-no-Rigidbody-and-component-Collider-
