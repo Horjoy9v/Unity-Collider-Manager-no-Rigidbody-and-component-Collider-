@@ -3,9 +3,12 @@ using UnityEngine;
 
 public class ColliderManager : DrawCapsule
 {
+    public static CollisionType currentCollisionType = CollisionType.air;
+    private int layerMask = Physics2D.AllLayers;
+    public float gravityVector;
+
     [Header("Form Collider")]
-    public bool isDrawGizmosCubeON = false;
-    public bool isDrawGizmosCapsuleON = false;
+    public bool isDrawGizmosShperesON = false;
 
     public enum CollisionType
     {
@@ -17,36 +20,28 @@ public class ColliderManager : DrawCapsule
         RightWall,
         air
     }
+
     [Space(5)]
     [Header("Options Capsule Collider")]
     public Vector2 capsuleSize;
     private float capsuleAngle;
     private Vector2 capsuleDirection;
-
-    [Header("Options Box Collider")]
-    public Vector2 boxSize;
-    public static CollisionType currentCollisionType = CollisionType.air;
-    private int layerMask = Physics2D.AllLayers;
+    [Space(5)]
+    [Header("Сollision pre-check")]
+    public float raycastDistance = 1f;
 
     private void Update()
     {
         currentCollisionType = ReturnCollisionName();
         Debug.Log(currentCollisionType);
-    }
-
-
-    public List<CollisionType> OverlapBoxAll(Vector2 center, Vector2 size)
-    {
-        List<CollisionType> collidedTypes = new List<CollisionType>();
-
-        Collider2D[] colliders = Physics2D.OverlapBoxAll(center, size, 0f, layerMask);
-        foreach (Collider2D collider in colliders)
+        /*  test Gravity
+        if (currentCollisionType == CollisionType.air)
         {
-            collidedTypes.AddRange(OverlapColliderAll(center, size, collider));
+            transform.position += new Vector3(0f, gravityVector * Time.deltaTime, 0f);
         }
-
-        return collidedTypes;
+        */
     }
+
     public List<CollisionType> OverlapCapsuleAll(Vector2 center, Vector2 size, float angle, Vector2 direction)
     {
         List<CollisionType> collidedTypes = new List<CollisionType>();
@@ -89,38 +84,39 @@ public class ColliderManager : DrawCapsule
         return collidedTypes;
     }
 
-
     public CollisionType ReturnCollisionName()
     {
-        List<CollisionType> collidedTypes = new List<CollisionType>();
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, raycastDistance, layerMask);
+        List<CollisionType> collidedTypes = OverlapCapsuleAll(transform.position, capsuleSize, capsuleAngle, capsuleDirection);
 
-        if(isDrawGizmosCubeON)
-        collidedTypes.AddRange(OverlapBoxAll(transform.position, boxSize));
-
-        if(isDrawGizmosCapsuleON)
-        collidedTypes.AddRange(OverlapCapsuleAll(transform.position, capsuleSize, capsuleAngle, capsuleDirection));
-
-        if (collidedTypes.Count > 0)
+        if (hit.collider != null && hit.point.y + capsuleSize.y / 2f > transform.position.y)
+        {
+            transform.position = new Vector2(transform.position.x, hit.point.y + capsuleSize.y / 2f);
+            return CollisionType.Ground;
+        }
+        else if (collidedTypes.Count > 0)
         {
             return collidedTypes[0];
         }
-
-        return CollisionType.air;
+        else
+        {
+            return CollisionType.air;
+        }
     }
+
+
     private void OnDrawGizmos()
     {
-        if (isDrawGizmosCubeON)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireCube(transform.position, new Vector3(boxSize.x, boxSize.y, 1));
-        }
-
-        if (isDrawGizmosCapsuleON)
+        if (isDrawGizmosShperesON)
         {
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(transform.position, capsuleSize.x / 2f);
         }
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position, transform.position + new Vector3(raycastDistance, 0f, 0f));
+        Gizmos.DrawLine(transform.position, transform.position + new Vector3(0f, raycastDistance, 0f));
+        Gizmos.DrawLine(transform.position, transform.position - new Vector3(raycastDistance, 0f, 0f));
+        Gizmos.DrawLine(transform.position, transform.position - new Vector3(0f, raycastDistance, 0f));
     }
-
-
 }
