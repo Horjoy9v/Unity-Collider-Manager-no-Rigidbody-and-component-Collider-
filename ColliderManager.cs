@@ -95,13 +95,10 @@ public class ColliderManager : DrawCapsule
             return CollisionType.Ground;
         }
         else if (collidedTypes.Count > 0)
-        {
             return collidedTypes[0];
-        }
+
         else
-        {
             return CollisionType.air;
-        }
     }
 
 
