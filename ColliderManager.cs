@@ -57,7 +57,7 @@ public class CharacterCollision : MonoBehaviour
         {
             // движение по стене вправо
         }
-        else
+        else if (collisionTypes.Contains(CollisionType.Air))
         {
             // свободное падение
             Debug.Log("свободное падение");
